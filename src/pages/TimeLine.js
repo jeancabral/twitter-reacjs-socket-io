@@ -1,14 +1,16 @@
 import React, { Component } from 'react';
+import socket from "socket.io-client";
 
 import twiiterLogo from "../twitter.svg";
 
 import "./Timeline.css";
 import api from '../services/api';
+import Tweet from '../components/Tweet';
 
 export default class TimeLine extends Component {
   state = {
-    newTweet: '',
     tweets: [],
+      newTweet: "" 
   };
 
   handleInputChange = e => {
@@ -23,16 +25,39 @@ export default class TimeLine extends Component {
 
     await api.post('/tweets', { author, content });
 
-    this.setState({ newTweet: '' })
+    this.setState({ 
+      newTweet: "" 
+    })
   }
 
   async componentDidMount() {
+
+    this.subscribeToEvents();
+
     const response = await api.get('/tweets');
+
     this.setState({ tweets: response.data })
   }
 
+  subscribeToEvents = () => {
+
+    const io = socket('http://localhost:3000');
+    
+    io.on("tweet", data => {
+      this.setState({ tweets: [data, ...this.state.tweets] })
+    });
+
+    io.on("like", data => {
+      this.setState({
+        tweets: this.state.tweets.map(tweet =>
+          tweet._id === data._id ? data : tweet
+        )
+      })
+    });
+
+  }
+
   render() {
-    console.log(this.state.tweets)
 
     const { tweets } = this.state;
 
@@ -49,7 +74,7 @@ export default class TimeLine extends Component {
         </form>
         <ul className="tweet-list">
           {tweets.map((tweet) =>
-            <li key={tweet._id}>{tweet.author}</li>
+            <Tweet key={tweet._id} tweet={tweet} />
           )}
         </ul>
       </div>

@@ -34,8 +34,6 @@ export default class Login extends Component {
 
   render() {
 
-    console.log(this.props)
-
     return (
       <div className="login-wrapper">
         <img src={twiiterLogo} alt="Twitter Clone" />
